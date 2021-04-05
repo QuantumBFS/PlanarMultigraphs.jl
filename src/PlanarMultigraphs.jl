@@ -1,5 +1,5 @@
 module PlanarMultigraphs
 
-# Write your package code here.
+include("planar_multigraph.jl")
 
 end
