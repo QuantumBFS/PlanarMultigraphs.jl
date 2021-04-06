@@ -190,6 +190,9 @@ end
     @test PlanarMultigraphs.check_faces(rz)
     @test PlanarMultigraphs.check_vertices(rz)
     @test PlanarMultigraphs.check_combinatorial_maps(rz)
+    PlanarMultigraphs.rem_vertex!(rz, 3)
+    @test PlanarMultigraphs.check_combinatorial_maps(rz)
+    @test PlanarMultigraphs.nf(rz) == 2
 
     rx = planar_rx()
     @test PlanarMultigraphs.check_faces(rx)

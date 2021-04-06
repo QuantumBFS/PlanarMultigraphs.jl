@@ -69,8 +69,9 @@ function trace_orbit(f::Function, a::T; rev::Bool = false) where T
 end
 trace_face(g::PlanarMultigraph, f::Integer) = trace_orbit(h -> g.next[h], surrounding_half_edge(g, f))
 trace_vertex(g::PlanarMultigraph, v::Integer) = trace_orbit(h -> σ_inv(g, h), out_half_edge(g, v); rev = true)
-
 neighbors(g::PlanarMultigraph, v::Integer) = [dst(g, he) for he in trace_vertex(g, v)]
+
+is_boundary(g::PlanarMultigraph, he_id::Integer) = (face(g, he_id) == 0)
 
 function rem_vertex!(g::PlanarMultigraph, v::Integer)
     for he in trace_vertex(g, v)
@@ -101,10 +102,12 @@ function rem_edge!(g::PlanarMultigraph, he_id::Integer)
     face_twin = face(g, twin_id)
 
     # remove a inner face
-    hes_f_he = trace_face(g, face_he)
-    rem_face!(g, face_he)
-    for he in hes_f_he
-        g.he2f[he] = face_twin
+    if face_he != face_twin
+        hes_f_he = trace_face(g, face_he)
+        rem_face!(g, face_he)
+        for he in hes_f_he
+            g.he2f[he] = face_twin
+        end
     end
 
     # update f2he
