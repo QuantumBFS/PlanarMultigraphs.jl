@@ -50,6 +50,7 @@ twin(g::PlanarMultigraph, he::Integer) = ϕ(g, he)
 nv(g::PlanarMultigraph) = length(g.v2he)
 nf(g::PlanarMultigraph) = length(g.f2he)
 nhe(g::PlanarMultigraph) = length(g.half_edges)
+ne(g::PlanarMultigraph) = nhe(g) ÷ 2
 
 out_half_edge(g::PlanarMultigraph, v::Integer) = g.v2he[v]
 surrounding_half_edge(g::PlanarMultigraph, f::Integer) = g.f2he[f]
