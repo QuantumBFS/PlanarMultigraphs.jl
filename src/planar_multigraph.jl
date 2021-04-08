@@ -74,15 +74,15 @@ neighbors(g::PlanarMultigraph, v::Integer) = [dst(g, he) for he in trace_vertex(
 
 is_boundary(g::PlanarMultigraph, he_id::Integer) = (face(g, he_id) == 0)
 
-function rem_vertex!(g::PlanarMultigraph, v::Integer)
+function rem_vertex!(g::PlanarMultigraph, v::Integer; update::Bool = true)
     for he in trace_vertex(g, v)
-        rem_edge!(g, he)
+        rem_edge!(g, he; update = update)
     end
     delete!(g.v2he, v)
     return g
 end
 
-function rem_edge!(g::PlanarMultigraph, he_id::Integer)
+function rem_edge!(g::PlanarMultigraph, he_id::Integer; update::Bool = true)
     # make sure the face of he_id is an inner face
     if is_boundary(g, he_id)
         he_id = twin(g, he_id)
@@ -93,33 +93,36 @@ function rem_edge!(g::PlanarMultigraph, he_id::Integer)
         he_id = twin(g, he_id)
     end
 
-    he_next = next(g, he_id)
-    he_prev = prev(g, he_id)
     twin_id = twin(g, he_id)
-    twin_next = next(g, twin_id)
-    twin_prev = prev(g, twin_id)
-    
-    face_he = face(g, he_id)
-    face_twin = face(g, twin_id)
 
-    # remove a inner face
-    if face_he != face_twin
-        hes_f_he = trace_face(g, face_he)
-        rem_face!(g, face_he)
-        for he in hes_f_he
-            g.he2f[he] = face_twin
+    if update
+        he_next = next(g, he_id)
+        he_prev = prev(g, he_id)
+        twin_next = next(g, twin_id)
+        twin_prev = prev(g, twin_id)
+        
+        face_he = face(g, he_id)
+        face_twin = face(g, twin_id)
+
+        # remove a inner face
+        if face_he != face_twin 
+            hes_f_he = trace_face(g, face_he)
+            rem_face!(g, face_he)
+            for he in hes_f_he
+                g.he2f[he] = face_twin
+            end
         end
+
+        # update f2he
+        (surrounding_half_edge(g, face_twin) == twin_id) && (g.f2he[face_twin] = twin_next)
+
+        # update v2he
+        (out_half_edge(g, src(g, he_id)) == he_id) && (g.v2he[src(g, he_id)] = twin(g, he_prev))
+        (out_half_edge(g, src(g, twin_id)) == twin_id) && (g.v2he[src(g, twin_id)] = twin(g, twin_prev))
+
+        g.next[he_prev] = twin_next
+        g.next[twin_prev] = he_next
     end
-
-    # update f2he
-    (surrounding_half_edge(g, face_twin) == twin_id) && (g.f2he[face_twin] = twin_next)
-
-    # update v2he
-    (out_half_edge(g, src(g, he_id)) == he_id) && (g.v2he[src(g, he_id)] = twin(g, he_prev))
-    (out_half_edge(g, src(g, twin_id)) == twin_id) && (g.v2he[src(g, twin_id)] = twin(g, twin_prev))
-    
-    g.next[he_prev] = twin_next
-    g.next[twin_prev] = he_next
     delete!(g.next, he_id)
     delete!(g.next, twin_id)
     delete!(g.half_edges, he_id)
